@@ -1,0 +1,156 @@
+Certainly! Below is a simple poker shot clock app that you can run in your browser. This app allows you to set a timer for each player's turn, ensuring the game flows smoothly.
+
+You can copy and paste the following code into a file with a `.html` extension and open it in your browser to use it.
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Poker Shot Clock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            margin: 0;
+            padding: 0;
+        }
+
+        #timer {
+            font-size: 100px;
+            margin-top: 100px;
+        }
+
+        .button {
+            font-size: 20px;
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #3498db;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .button:active {
+            background-color: #2980b9;
+        }
+
+        #settings {
+            margin-top: 50px;
+        }
+
+        input[type=number] {
+            font-size: 20px;
+            width: 60px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="timer">30</div>
+
+    <button id="startButton" class="button">Start</button>
+    <button id="pauseButton" class="button">Pause</button>
+    <button id="resetButton" class="button">Reset</button>
+
+    <div id="settings">
+        <label for="timeInput">Set Time (seconds): </label>
+        <input type="number" id="timeInput" value="30" min="1" max="300">
+    </div>
+
+    <script>
+        var timerDisplay = document.getElementById('timer');
+        var startButton = document.getElementById('startButton');
+        var pauseButton = document.getElementById('pauseButton');
+        var resetButton = document.getElementById('resetButton');
+        var timeInput = document.getElementById('timeInput');
+
+        var timeLeft = parseInt(timeInput.value);
+        var timerId;
+        var isRunning = false;
+
+        timerDisplay.textContent = timeLeft;
+
+        startButton.addEventListener('click', function() {
+            if (!isRunning) {
+                timeLeft = parseInt(timerDisplay.textContent);
+                timerId = setInterval(countdown, 1000);
+                isRunning = true;
+            }
+        });
+
+        pauseButton.addEventListener('click', function() {
+            if (isRunning) {
+                clearInterval(timerId);
+                isRunning = false;
+            }
+        });
+
+        resetButton.addEventListener('click', function() {
+            clearInterval(timerId);
+            timeLeft = parseInt(timeInput.value);
+            timerDisplay.textContent = timeLeft;
+            isRunning = false;
+        });
+
+        timeInput.addEventListener('change', function() {
+            if (!isRunning) {
+                timeLeft = parseInt(timeInput.value);
+                timerDisplay.textContent = timeLeft;
+            }
+        });
+
+        function countdown() {
+            if (timeLeft <= 0) {
+                clearInterval(timerId);
+                timerDisplay.textContent = "Time's up!";
+                isRunning = false;
+                alert("Time's up!");
+            } else {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+            }
+        }
+    </script>
+
+</body>
+</html>
+```
+
+## How to Use the App
+
+1. **Set the Timer**: Adjust the timer using the input field under "Set Time (seconds)". The default is 30 seconds.
+2. **Start the Timer**: Click the **Start** button to begin the countdown.
+3. **Pause the Timer**: Click the **Pause** button to pause the countdown at any time.
+4. **Reset the Timer**: Click the **Reset** button to reset the timer to the set value.
+5. **Adjust Time During Play**: You can change the timer value before starting or after resetting.
+
+## Features
+
+- **Start/Pause/Reset Controls**: Manage the timer with intuitive buttons.
+- **Adjustable Timer**: Set the countdown time between 1 and 300 seconds.
+- **Visual Countdown**: Large display shows the remaining time.
+- **Alert on Time Up**: An alert pops up when the timer reaches zero.
+
+## Customization
+
+You can customize the look and feel of the app by modifying the CSS styles within the `<style>` tags. For example, you can change the background color, font styles, or button designs to suit your preferences.
+
+## Explanation of the Code
+
+- **HTML Structure**: The app consists of a timer display, control buttons (Start, Pause, Reset), and a settings section to input the desired time.
+- **CSS Styling**: Styles are applied to enhance the visual appearance, including fonts, colors, and layout.
+- **JavaScript Functionality**:
+  - Variables are initialized to manage the timer state.
+  - Event listeners are added to buttons to handle user interactions.
+  - The `countdown` function updates the timer display every second and checks if the time has run out.
+  - The `alert` function notifies the user when the time is up.
+
+Feel free to enhance the app by adding more features, such as sound alerts, different themes, or player turn management.
+
+---
+
+**Note**: Always ensure that your browser allows JavaScript execution for the app to function correctly.

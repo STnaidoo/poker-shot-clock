@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Poker Shot Clock</title>
+    <style>
+        body {
+            position: relative;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.5s;
+            text-align: center;
+            height: 100vh;
+        }
+
+        #settingsIcon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        #timerContainer {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.05);
+            transition: border-color 0.3s, background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50%;
+            max-width: 600px;
+            min-width: 300px;
+            box-sizing: border-box;
+        }
+
+        #timerContainer:hover {
+            border-color: #f1c40f;
+            background-color: rgba(241, 196, 15, 0.1);
+        }
+
+        #timer {
+            font-size: 20vw;
+            line-height: 1;
+            margin: 0;
+            color: #ecf0f1;
+            transition: color 0.3s;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        #timerContainer:hover #timer {
+            color: #f1c40f;
+        }
+
+        #timeBanks {
+            font-size: 5vh;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #timeBanksIcon {
+            font-size: 5vh;
+            margin-right: 10px;
+        }
+
+        #buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .button {
+            font-size: 5vh;
+            width: 100px;
+            height: 100px;
+            margin: 10px;
+            background-color: #3498db;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .button:active {
+            background-color: #2980b9;
+        }
+
+        /* Added media query for tablets and phones */
+        @media (max-width: 768px) {
+            #timer {
+                font-size: 40vw;
+            }
+
+            #timerContainer {
+                width: 80%; /* Increased width */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="settingsIcon">⚙</div>
+
+    <div id="timerContainer">
+        <div id="timer">30</div>
+    </div>
+
+    <div id="timeBanks">
+        <div id="timeBanksIcon">⏳</div>
+        <div id="timeBanksText">0</div>
+    </div>
+
+    <div id="buttons">
+        <button id="toggleButton" class="button">▶</button>
+    </div>
+
+    <script>
+        var timerDisplay = document.getElementById('timer');
+        var timeBanksText = document.getElementById('timeBanksText');
+        var toggleButton = document.getElementById('toggleButton');
+        var settingsIcon = document.getElementById('settingsIcon');
+        var timerContainer = document.getElementById('timerContainer');
+
+        var timeLeft;
+        var initialTime;
+        var timerId;
+        var isRunning = false;
+        var timeBanksOwed = 0;
+
+        // Load the timer duration from localStorage or use default
+        if (localStorage.getItem('timerDuration')) {
+            initialTime = parseInt(localStorage.getItem('timerDuration'));
+        } else {
+            initialTime = 30; // default value
+        }
+        timeLeft = initialTime;
+        timerDisplay.textContent = timeLeft;
+
+        toggleButton.addEventListener('click', function() {
+            if (!isRunning) {
+                timerId = setInterval(countdown, 1000);
+                isRunning = true;
+                toggleButton.textContent = '⏸';
+            } else {
+                clearInterval(timerId);
+                document.body.style.backgroundColor = '#2c3e50'; // Reset background color
+                isRunning = false;
+                toggleButton.textContent = '▶';
+            }
+        });
+
+        timerContainer.addEventListener('click', resetTimer);
+
+        settingsIcon.addEventListener('click', function() {
+            window.location.href = 'settings.html';
+        });
+
+        function countdown() {
+            // Decrement timeLeft
+            timeLeft--;
+
+            if (timeLeft >= 0) {
+                timerDisplay.textContent = timeLeft;
+            }
+
+            if (timeLeft <= 5 && timeLeft >= 0) {
+                // Flash red on the second
+                document.body.style.backgroundColor = '#e74c3c'; // Flash red
+                playTick();
+
+                // Return to original color after half a second
+                setTimeout(function() {
+                    document.body.style.backgroundColor = '#2c3e50'; // Original color
+                }, 500);
+            } else {
+                // Ensure background color is set to default if not flashing
+                document.body.style.backgroundColor = '#2c3e50';
+            }
+
+            if (timeLeft < 0) {
+                // Time has expired
+                timeBanksOwed++;
+                updateTimeBanksDisplay();
+                playBeep();
+
+                // Reset timer
+                timeLeft = initialTime;
+                timerDisplay.textContent = timeLeft;
+                document.body.style.backgroundColor = '#2c3e50';
+            }
+        }
+
+        function playBeep() {
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+            var oscillator = context.createOscillator();
+            var gainNode = context.createGain();
+
+            oscillator.type = "triangle";
+            oscillator.frequency.setValueAtTime(260, context.currentTime); // Slightly higher frequency
+
+            gainNode.gain.setValueAtTime(1, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.5); // Smooth fade out
+
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.5); // Longer duration
+        }
+
+        function playTick() {
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+            var oscillator = context.createOscillator();
+            oscillator.type = "square";
+            oscillator.frequency.setValueAtTime(880, context.currentTime); // Higher frequency for tick
+            oscillator.connect(context.destination);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.05); // Tick duration in seconds
+        }
+
+        function playRestartSound() {
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Create a buffer with white noise
+            var bufferSize = context.sampleRate * 0.03; // 30ms duration
+            var buffer = context.createBuffer(1, bufferSize, context.sampleRate);
+            var data = buffer.getChannelData(0);
+
+            for (var i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2); // Exponential decay
+            }
+
+            // First noise burst
+            var noise1 = context.createBufferSource();
+            noise1.buffer = buffer;
+            noise1.connect(context.destination);
+            noise1.start(context.currentTime);
+
+            // Second noise burst, shortly after the first
+            var noise2 = context.createBufferSource();
+            noise2.buffer = buffer;
+            noise2.connect(context.destination);
+            noise2.start(context.currentTime + 0.2); // 200 milliseconds later
+        }
+
+        function resetTimer() {
+            clearInterval(timerId);
+            timeLeft = initialTime;
+            timerDisplay.textContent = timeLeft;
+            document.body.style.backgroundColor = '#2c3e50'; // Reset background color
+            playRestartSound(); // Play restart sound
+            isRunning = true;
+            timerId = setInterval(countdown, 1000);
+            toggleButton.textContent = '⏸';
+
+            // Reset time banks owed to zero
+            timeBanksOwed = 0;
+            updateTimeBanksDisplay();
+        }
+
+        function updateTimeBanksDisplay() {
+            timeBanksText.textContent = timeBanksOwed;
+        }
+    </script>
+
+</body>
+</html>

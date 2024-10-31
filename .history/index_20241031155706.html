@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Poker Shot Clock</title>
+    <style>
+        body {
+            position: relative;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.5s;
+            text-align: center;
+            height: 100vh; /* Ensure full viewport height */
+        }
+
+        #settingsIcon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        #timer {
+            font-size: 30vh;
+            line-height: 1;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        #timeBanks {
+            font-size: 5vh;
+            margin-top: 20px;
+        }
+
+        #buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .button {
+            font-size: 5vh;
+            width: 100px;
+            height: 100px;
+            margin: 10px;
+            background-color: #3498db;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .button:active {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="settingsIcon">⚙</div>
+
+    <div id="timer">30</div>
+    <div id="timeBanks">Time Banks Owed: 0</div>
+
+    <div id="buttons">
+        <button id="startButton" class="button">▶</button>
+        <button id="pauseButton" class="button">⏸</button>
+    </div>
+
+    <script>
+        var timerDisplay = document.getElementById('timer');
+        var timeBanksDisplay = document.getElementById('timeBanks');
+        var startButton = document.getElementById('startButton');
+        var pauseButton = document.getElementById('pauseButton');
+        var settingsIcon = document.getElementById('settingsIcon');
+
+        var timeLeft;
+        var initialTime;
+        var timerId;
+        var isRunning = false;
+        var timeBanksOwed = 0;
+        var flashIntervalId = null;
+
+        // Load the timer duration from localStorage or use default
+        if (localStorage.getItem('timerDuration')) {
+            initialTime = parseInt(localStorage.getItem('timerDuration'));
+        } else {
+            initialTime = 30; // default value
+        }
+        timeLeft = initialTime;
+        timerDisplay.textContent = timeLeft;
+
+        startButton.addEventListener('click', function() {
+            if (!isRunning) {
+                timerId = setInterval(countdown, 1000);
+                isRunning = true;
+            }
+        });
+
+        pauseButton.addEventListener('click', function() {
+            if (isRunning) {
+                clearInterval(timerId);
+                clearInterval(flashIntervalId);
+                flashIntervalId = null;
+                document.body.style.backgroundColor = '#2c3e50'; // Reset background color
+                isRunning = false;
+            }
+        });
+
+        timerDisplay.addEventListener('click', resetTimer);
+
+        settingsIcon.addEventListener('click', function() {
+            window.location.href = 'settings.html';
+        });
+
+        function countdown() {
+            if (timeLeft <= 0) {
+                timeBanksOwed++;
+                timeBanksDisplay.textContent = 'Time Banks Owed: ' + timeBanksOwed;
+                playBeep();
+                timeLeft = initialTime;
+                timerDisplay.textContent = timeLeft;
+                // Reset flash effects
+                clearInterval(flashIntervalId);
+                flashIntervalId = null;
+                document.body.style.backgroundColor = '#2c3e50';
+            } else {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+
+                if (timeLeft <= 5) {
+                    // Start flashing and ticking
+                    if (!flashIntervalId) {
+                        flashIntervalId = setInterval(flashScreen, 500);
+                    }
+                    playTick();
+                }
+            }
+        }
+
+        function flashScreen() {
+            if (document.body.style.backgroundColor === 'rgb(44, 62, 80)') {
+                document.body.style.backgroundColor = '#e74c3c'; // Flash red
+            } else {
+                document.body.style.backgroundColor = '#2c3e50'; // Original color
+            }
+        }
+
+        function playBeep() {
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+            var oscillator = context.createOscillator();
+            oscillator.type = "square";
+            oscillator.frequency.setValueAtTime(440, context.currentTime); // Frequency in Hz
+            oscillator.connect(context.destination);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.1); // Beep duration in seconds
+        }
+
+        function playTick() {
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+            var oscillator = context.createOscillator();
+            oscillator.type = "square";
+            oscillator.frequency.setValueAtTime(880, context.currentTime); // Higher frequency for tick
+            oscillator.connect(context.destination);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.05); // Tick duration in seconds
+        }
+
+        function playRestartSound() {
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+            var oscillator = context.createOscillator();
+            oscillator.type = "square";
+            oscillator.frequency.setValueAtTime(300, context.currentTime); // Lower frequency for tap sound
+            oscillator.connect(context.destination);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.05); // Short duration
+        }
+
+        function resetTimer() {
+            clearInterval(timerId);
+            clearInterval(flashIntervalId);
+            flashIntervalId = null;
+            timeLeft = initialTime;
+            timerDisplay.textContent = timeLeft;
+            document.body.style.backgroundColor = '#2c3e50'; // Reset background color
+            playRestartSound(); // Play restart sound
+            isRunning = true;
+            timerId = setInterval(countdown, 1000);
+        }
+    </script>
+
+</body>
+</html>
